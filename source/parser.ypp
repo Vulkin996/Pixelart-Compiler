@@ -1,0 +1,28 @@
+%{
+#include <iostream>
+
+#define YYDEBUG 1
+
+using namespace std;
+
+void yyerror(string s){
+  cerr<<s<<endl;
+  exit(EXIT_FAILURE);
+}
+
+int yylex();
+
+%}
+
+%union{
+
+}
+
+%%
+ Program : {}
+%%
+
+int main(){
+
+  return 0;
+}
