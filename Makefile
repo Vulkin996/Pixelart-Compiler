@@ -17,4 +17,4 @@ parser.tab.cpp parser.tab.hpp: source/parser.ypp
 .PHONY: clean
 
 clean:
-	rm -f *~ *tab* lex.yy.c kaleidoscope *.o
+	rm -f *~ *tab* lex.yy.c $(PROG) *.o *.output
