@@ -24,4 +24,4 @@ image.o: source/image.c
 .PHONY: clean
 
 clean:
-	rm -f *~ *tab* lex.yy.c $(PROG) *.o *.output
+	rm -f *~ *tab* lex.yy.c $(PROG) *.o *.output imageParser tmpReprFile
