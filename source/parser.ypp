@@ -1,4 +1,5 @@
 %{
+#include "./header/util.hpp"
 #include <iostream>
 
 #define YYDEBUG 1
@@ -15,14 +16,34 @@ int yylex();
 %}
 
 %union{
-
+ int i;
 }
 
+%token print_token add_token mul_token label_token jump_token inc_token
+%token<i> num_token
+
 %%
- Program : {}
+//grammar for testing
+ Program : token Program {}
+ 				 | token {}
+				 ;
+ token : print_token
+ 			 | add_token
+			 | mul_token
+			 | label_token
+			 | jump_token
+			 | inc_token
+			 | num_token
+			 ;
 %%
 
-int main(){
+extern FILE* yyin;
+int main(int argc, char** argv){
+	parseImage(argv[1]);
+	yyin = fopen("tmpReprFile", "r");
+	if(!yyin)
+		yyerror("Unable to open tmpReprFile file!");
+	yyparse();
 
   return 0;
 }

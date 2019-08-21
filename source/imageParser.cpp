@@ -1,14 +1,15 @@
 #include "../header/image.h"
+#include "../header/util.hpp"
 #include <iostream>
 #include <fstream>
 #include <stack>
 
 using namespace std;
 
-int main(int argc, char** argv){
+int parseImage(char* image_path){
   Image* image;
 	image = image_init(0, 0);
-  string asd(argv[1]);
+  string asd(image_path);
 	char *cstr = &asd[0u];
 	image_read(image, cstr);
 
@@ -25,10 +26,10 @@ int main(int argc, char** argv){
     unsigned g = (256+(int)image->pixels[i*4+1])%256;
     unsigned b = (256+(int)image->pixels[i*4+2])%256;
     unsigned a = (256+(int)image->pixels[i*4+3])%256;
-    cout << " pixels[0] = " << r;
+    /*cout << " pixels[0] = " << r;
     cout << " pixels[1] = " << g;
     cout << " pixels[2] = " << b;
-    cout << " pixels[3] = " << a<<endl;
+    cout << " pixels[3] = " << a<<endl;*/
 
 		//if a pixel is not at maximum alpha, or its white ignore it.
 		if(a < 255 || (r == 255 && g == 255 & b == 255))
