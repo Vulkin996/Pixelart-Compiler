@@ -20,21 +20,38 @@ int yylex();
 }
 
 %token print_token add_token mul_token label_token jump_token inc_token
-%token<i> num_token
+%token<i> num_token address_token
+
+%type <i> number_value
 
 %%
 //grammar for testing
- Program : token Program {}
- 				 | token {}
-				 ;
- token : print_token
- 			 | add_token
-			 | mul_token
+
+Program: Program Naredba {
+
+ }
+| Naredba {
+
+ }
+;
+
+Naredba: add_token number_value number_value address_token{
+
+}
+       | print_token
+			 | mul_token number_value number_value address_token
 			 | label_token
 			 | jump_token
-			 | inc_token
-			 | num_token
+			 | inc_token address_token
+       | number_value
 			 ;
+
+number_value: num_token {
+  $$ = $1;
+}
+| address_token{
+  $$ = $1; //Here we have to fetch a register value
+}
 %%
 
 extern FILE* yyin;

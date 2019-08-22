@@ -127,7 +127,8 @@ void image_read(Image *image, char *filename) {
      * komponenti).
      */
 	  //shift fix
-	  for (i = 0; i < 5; i++) {
+
+    for (i = 0; i < 4; i++) {
 		  fread(&b, sizeof(char), 1, file);
 		  fread(&g, sizeof(char), 1, file);
 		  fread(&r, sizeof(char), 1, file);
