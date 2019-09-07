@@ -3,8 +3,11 @@
 #include <iostream>
 
 #define YYDEBUG 1
+#define NUMBER_OF_REGISTERS 65536
 
 using namespace std;
+
+int registers[NUMBER_OF_REGISTERS];
 
 void yyerror(string s){
   cerr<<s<<endl;
@@ -36,23 +39,39 @@ Program: Program Naredba {
 ;
 
 Naredba: add_token number_value number_value address_token{
-
+  registers[$4] = $2 + $3;
 }
-       | print_token
-			 | mul_token number_value number_value address_token
-			 | label_token
-			 | jump_token
-			 | inc_token address_token
-       | number_value
-			 ;
+| print_token num_token number_value{
+  printf("Print number: %d\n", $3);
+}
+| print_token address_token number_value{
+  printf("Print character: %c\n", $3);
+}
+| mul_token number_value number_value address_token{
+  registers[$4] = $2 * $3;
+}
+| label_token address_token{
+  //Adding label to the label table i guess
+  //the address_token is the index of the label we are declaring
+}
+| jump_token number_value address_token{
+  if ($2){
+    //Jump to the label index address_token
+  }
+}
+| inc_token address_token{
+  registers[$2]++;
+}
+;
 
 number_value: num_token {
   $$ = $1;
 }
 | address_token{
-  $$ = $1; //Here we have to fetch a register value
+  $$ = registers[$1]; //Here we have to fetch a register value
 }
 %%
+
 
 extern FILE* yyin;
 int main(int argc, char** argv){

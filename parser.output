@@ -1,0 +1,272 @@
+Grammar
+
+    0 $accept: Program $end
+
+    1 Program: Program Naredba
+    2        | Naredba
+
+    3 Naredba: add_token number_value number_value address_token
+    4        | print_token num_token number_value
+    5        | print_token address_token number_value
+    6        | mul_token number_value number_value address_token
+    7        | label_token address_token
+    8        | jump_token number_value address_token
+    9        | inc_token address_token
+
+   10 number_value: num_token
+   11             | address_token
+
+
+Terminals, with rules where they appear
+
+$end (0) 0
+error (256)
+print_token (258) 4 5
+add_token (259) 3
+mul_token (260) 6
+label_token (261) 7
+jump_token (262) 8
+inc_token (263) 9
+num_token (264) 4 10
+address_token (265) 3 5 6 7 8 9 11
+
+
+Nonterminals, with rules where they appear
+
+$accept (11)
+    on left: 0
+Program (12)
+    on left: 1 2, on right: 0 1
+Naredba (13)
+    on left: 3 4 5 6 7 8 9, on right: 1 2
+number_value (14)
+    on left: 10 11, on right: 3 4 5 6 8
+
+
+State 0
+
+    0 $accept: . Program $end
+
+    print_token  shift, and go to state 1
+    add_token    shift, and go to state 2
+    mul_token    shift, and go to state 3
+    label_token  shift, and go to state 4
+    jump_token   shift, and go to state 5
+    inc_token    shift, and go to state 6
+
+    Program  go to state 7
+    Naredba  go to state 8
+
+
+State 1
+
+    4 Naredba: print_token . num_token number_value
+    5        | print_token . address_token number_value
+
+    num_token      shift, and go to state 9
+    address_token  shift, and go to state 10
+
+
+State 2
+
+    3 Naredba: add_token . number_value number_value address_token
+
+    num_token      shift, and go to state 11
+    address_token  shift, and go to state 12
+
+    number_value  go to state 13
+
+
+State 3
+
+    6 Naredba: mul_token . number_value number_value address_token
+
+    num_token      shift, and go to state 11
+    address_token  shift, and go to state 12
+
+    number_value  go to state 14
+
+
+State 4
+
+    7 Naredba: label_token . address_token
+
+    address_token  shift, and go to state 15
+
+
+State 5
+
+    8 Naredba: jump_token . number_value address_token
+
+    num_token      shift, and go to state 11
+    address_token  shift, and go to state 12
+
+    number_value  go to state 16
+
+
+State 6
+
+    9 Naredba: inc_token . address_token
+
+    address_token  shift, and go to state 17
+
+
+State 7
+
+    0 $accept: Program . $end
+    1 Program: Program . Naredba
+
+    $end         shift, and go to state 18
+    print_token  shift, and go to state 1
+    add_token    shift, and go to state 2
+    mul_token    shift, and go to state 3
+    label_token  shift, and go to state 4
+    jump_token   shift, and go to state 5
+    inc_token    shift, and go to state 6
+
+    Naredba  go to state 19
+
+
+State 8
+
+    2 Program: Naredba .
+
+    $default  reduce using rule 2 (Program)
+
+
+State 9
+
+    4 Naredba: print_token num_token . number_value
+
+    num_token      shift, and go to state 11
+    address_token  shift, and go to state 12
+
+    number_value  go to state 20
+
+
+State 10
+
+    5 Naredba: print_token address_token . number_value
+
+    num_token      shift, and go to state 11
+    address_token  shift, and go to state 12
+
+    number_value  go to state 21
+
+
+State 11
+
+   10 number_value: num_token .
+
+    $default  reduce using rule 10 (number_value)
+
+
+State 12
+
+   11 number_value: address_token .
+
+    $default  reduce using rule 11 (number_value)
+
+
+State 13
+
+    3 Naredba: add_token number_value . number_value address_token
+
+    num_token      shift, and go to state 11
+    address_token  shift, and go to state 12
+
+    number_value  go to state 22
+
+
+State 14
+
+    6 Naredba: mul_token number_value . number_value address_token
+
+    num_token      shift, and go to state 11
+    address_token  shift, and go to state 12
+
+    number_value  go to state 23
+
+
+State 15
+
+    7 Naredba: label_token address_token .
+
+    $default  reduce using rule 7 (Naredba)
+
+
+State 16
+
+    8 Naredba: jump_token number_value . address_token
+
+    address_token  shift, and go to state 24
+
+
+State 17
+
+    9 Naredba: inc_token address_token .
+
+    $default  reduce using rule 9 (Naredba)
+
+
+State 18
+
+    0 $accept: Program $end .
+
+    $default  accept
+
+
+State 19
+
+    1 Program: Program Naredba .
+
+    $default  reduce using rule 1 (Program)
+
+
+State 20
+
+    4 Naredba: print_token num_token number_value .
+
+    $default  reduce using rule 4 (Naredba)
+
+
+State 21
+
+    5 Naredba: print_token address_token number_value .
+
+    $default  reduce using rule 5 (Naredba)
+
+
+State 22
+
+    3 Naredba: add_token number_value number_value . address_token
+
+    address_token  shift, and go to state 25
+
+
+State 23
+
+    6 Naredba: mul_token number_value number_value . address_token
+
+    address_token  shift, and go to state 26
+
+
+State 24
+
+    8 Naredba: jump_token number_value address_token .
+
+    $default  reduce using rule 8 (Naredba)
+
+
+State 25
+
+    3 Naredba: add_token number_value number_value address_token .
+
+    $default  reduce using rule 3 (Naredba)
+
+
+State 26
+
+    6 Naredba: mul_token number_value number_value address_token .
+
+    $default  reduce using rule 6 (Naredba)
