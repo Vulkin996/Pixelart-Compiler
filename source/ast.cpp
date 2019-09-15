@@ -2,6 +2,8 @@
 
 using namespace std;
 
+extern int registers[];
+
 //*********************************************************************
 InnerExprAST::~InnerExprAST() {
   for (auto i : Vec)
@@ -64,3 +66,42 @@ void MulExprAST::codegen() const {
 void IncExprAST::codegen() const {
 	cout << "Inc" << endl;
 }
+//*********************************************************************
+
+int NumberExprAST::interpret() const {
+	return Val;
+}
+
+int VarExprAST::interpret() const{
+	return registers[adr];
+}
+
+int PrintNumExprAST::interpret() const {
+  printf("Print number: %d\n", Vec[0]->interpret());
+	return 0;
+}
+
+int PrintCharExprAST::interpret() const {
+	printf("Print number: %c\n", Vec[0]->interpret());
+	return 0;
+}
+
+int AddExprAST::interpret() const {
+	int l = Vec[0]->interpret();
+	int r = Vec[1]->interpret();
+	registers[adr] = l + r;
+	return registers[adr];
+}
+
+int MulExprAST::interpret() const {
+	int l = Vec[0]->interpret();
+	int r = Vec[1]->interpret();
+	registers[adr] = l * r;
+	return registers[adr];
+}
+
+int IncExprAST::interpret() const {
+	registers[adr]++;
+	return registers[adr];
+}
+//*********************************************************************

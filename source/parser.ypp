@@ -2,6 +2,7 @@
 #include "./header/util.hpp"
 #include "./header/ast.hpp"
 #include <iostream>
+#include <cstring>
 
 #define YYDEBUG 1
 #define NUMBER_OF_REGISTERS 65536
@@ -34,70 +35,41 @@ int yylex();
 //grammar for testing
 
 Program: Program Instruction {
+	if(compile)
 		$2->codegen();
+	else
+		$2->interpret();
  }
 | Instruction {
+	if(compile)
 		$1->codegen();
+	else
+		$1->interpret();
  }
 ;
 
 Instruction: print_token num_token NumVal {
-	if(compile){
 		$$ = new PrintNumExprAST($3);
-	}
-	else{
-  	//printf("Print number: %d\n", $3);
-	}
 }
 | print_token address_token NumVal{
-	if(compile){
 		$$ = new PrintCharExprAST($3);
-	}
-	else{
-  	//printf("Print character: %c\n", $3);
-	}
 }
 | add_token NumVal NumVal address_token{
-	if(compile){
 		$$ = new AddExprAST($2, $3, $4);
-	}
-	else{
-  	//registers[$4] = $2 + $3;
-	}
 }
 | mul_token NumVal NumVal address_token{
-	if(compile){
 		$$ = new MulExprAST($2, $3, $4);
-	}
-	else{
-  	//registers[$4] = $2 * $3;
-	}
 }
 | inc_token address_token{
-	if(compile){
 		$$ = new IncExprAST($2);
-	}
-	else{
-  	//registers[$2]++;
-	}
 }
 ;
 
 NumVal: num_token {
-	if(compile){
 		$$ = new NumberExprAST($1);
-	}
-	else{
-  	//$$ = $1;
-	}
 }
 | address_token{
-	if(compile){
 		$$ = new VarExprAST($1);
-	}
-	else{
-  	//$$ = registers[$1]; //Here we have to fetch a register value
-	}
 }
 %%
 
@@ -105,8 +77,13 @@ NumVal: num_token {
 extern FILE* yyin;
 int main(int argc, char** argv){
 
-	if(argc != 2)
-		yyerror("Usage: ./pixelcode path_to_image_file");
+	if(argc < 2 || argc > 3)
+		yyerror("Usage: ./pixelcode path_to_image_file -i(for interpretation)");
+
+	if(strcmp(argv[2], "-i") == 0){
+		compile = false;
+	}
+
 
 	parseImage(argv[1]);
 	yyin = fopen("tmpReprFile", "r");
