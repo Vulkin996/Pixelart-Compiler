@@ -8,8 +8,10 @@ LDFLAGS=$(shell llvm-config-6.0 --ldflags --libs)
 
 
 
-$(PROG): lex.yy.o parser.o imageParser.o image.o
+$(PROG): lex.yy.o parser.o imageParser.o image.o ast.o
 	$(CC) $(LDFLAGS) -o $@ $^
+ast.o: source/ast.cpp header/ast.hpp
+	$(CC) $(CPPFLAGS) -c -o $@ $<
 lex.yy.o: lex.yy.c parser.tab.hpp
 	$(CC) $(CPPFLAGS) -Wno-deprecated -c -o $@ $<
 lex.yy.c: source/lexer.lex

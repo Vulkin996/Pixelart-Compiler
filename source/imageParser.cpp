@@ -7,9 +7,12 @@
 using namespace std;
 
 int parseImage(char* image_path){
+
   Image* image;
 	image = image_init(0, 0);
+
   string asd(image_path);
+
 	char *cstr = &asd[0u];
 	image_read(image, cstr);
 

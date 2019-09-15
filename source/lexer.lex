@@ -6,6 +6,7 @@
 #include <iostream>
 #include <string>
 #include <cmath>
+#include "./header/ast.hpp"
 #include "parser.tab.hpp"
 
 using namespace std;

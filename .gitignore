@@ -1,8 +1,10 @@
 # Compiled source #
 ###################
 *.o
+*.output
 pixelcode
 parser.tab.cpp
 parser.tab.hpp
+lex.yy.c
 
 tmpReprFile
