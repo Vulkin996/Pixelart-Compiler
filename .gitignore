@@ -1,0 +1,8 @@
+# Compiled source #
+###################
+*.o
+pixelcode
+parser.tab.cpp
+parser.tab.hpp
+
+tmpReprFile
