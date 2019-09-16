@@ -6,9 +6,22 @@
 
 using namespace std;
 
+#include "llvm/IR/Module.h"
+#include "llvm/IR/IRBuilder.h"
+#include "llvm/IR/Verifier.h"
+#include "llvm/IR/LegacyPassManager.h"
+#include "llvm/Transforms/Scalar.h"
+#include "llvm/Support/TargetRegistry.h"
+#include "llvm/Target/TargetOptions.h"
+#include "llvm/Target/TargetMachine.h"
+#include "llvm/Support/FileSystem.h"
+
+using namespace llvm;
+using namespace llvm::legacy;
+
 class ExprAST {
 public:
-  virtual void codegen() const = 0;
+  virtual Value* codegen() const = 0;
 	virtual int interpret() const = 0;
   virtual ~ExprAST() {
 
@@ -20,7 +33,7 @@ public:
   NumberExprAST(int v)
     :Val(v)
   {}
-  void codegen() const;
+  Value* codegen() const;
 	int interpret() const;
 private:
   int Val;
@@ -29,7 +42,7 @@ private:
 class VarExprAST : public ExprAST {
 public:
 	VarExprAST(int adr) : adr(adr) {}
-	void codegen() const;
+	Value* codegen() const;
 	int interpret() const;
 private:
 	int adr;
@@ -57,21 +70,21 @@ protected:
 class PrintNumExprAST : public InnerExprAST {
 public:
 	PrintNumExprAST(ExprAST* e): InnerExprAST(e){}
-	void codegen() const;
+	Value* codegen() const;
 	int interpret() const;
 };
 
 class PrintCharExprAST : public InnerExprAST {
 public:
 	PrintCharExprAST(ExprAST* e): InnerExprAST(e){}
-	void codegen() const;
+	Value* codegen() const;
 	int interpret() const;
 };
 
 class AddExprAST : public InnerExprAST {
 public:
 	AddExprAST(ExprAST* l, ExprAST* r, int a): InnerExprAST(l,r), adr(a){}
-	void codegen() const;
+	Value* codegen() const;
 	int interpret() const;
 private:
 	int adr;
@@ -80,7 +93,7 @@ private:
 class MulExprAST : public InnerExprAST {
 public:
 	MulExprAST(ExprAST* l, ExprAST* r, int a): InnerExprAST(l,r), adr(a){}
-	void codegen() const;
+	Value* codegen() const;
 	int interpret() const;
 private:
 	int adr;
@@ -89,10 +102,13 @@ private:
 class IncExprAST : public ExprAST {
 public:
 	IncExprAST(int adr): adr(adr){}
-	void codegen() const;
+	Value* codegen() const;
 	int interpret() const;
 private:
 	int adr;
 };
+//*********************************************************************************************************
+void InitializeModuleAndPassManager(void);
+AllocaInst *CreateEntryBlockAlloca(Function *TheFunction, const string &VarName);
 
 #endif

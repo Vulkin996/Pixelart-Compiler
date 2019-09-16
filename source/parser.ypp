@@ -66,6 +66,7 @@ Instruction: print_token num_token NumVal {
 ;
 
 NumVal: num_token {
+		//cout << $1 << endl;
 		$$ = new NumberExprAST($1);
 }
 | address_token{
@@ -73,23 +74,62 @@ NumVal: num_token {
 }
 %%
 
-
 extern FILE* yyin;
+extern Module* TheModule;
+extern LLVMContext TheContext;
+extern IRBuilder<> Builder;
+Value *StrPrintNum = NULL;
+Value *StrPrintChar = NULL;
+Function* PrintfFun;
+Function* MainFun;
+
 int main(int argc, char** argv){
 
-	if(argc < 2 || argc > 3)
+	if(argc < 2 || argc > 3){
 		yyerror("Usage: ./pixelcode path_to_image_file -i(for interpretation)");
+	}
 
-	if(strcmp(argv[2], "-i") == 0){
+	if(argc == 3 && strcmp(argv[2], "-i") == 0){
 		compile = false;
 	}
 
-
 	parseImage(argv[1]);
+
 	yyin = fopen("tmpReprFile", "r");
 	if(!yyin)
 		yyerror("Unable to open tmpReprFile file!");
+
+	if(compile){
+		//cout<<"initing module and pass" << endl;
+		InitializeModuleAndPassManager();
+
+		//cout<<"creating pritf" << endl;
+		FunctionType *FT1 = FunctionType::get(IntegerType::getInt32Ty(TheContext), PointerType::get(Type::getInt8Ty(TheContext), 0), true);
+  	PrintfFun = Function::Create(FT1, Function::ExternalLinkage, "printf", TheModule);
+
+		//cout<<"creating main" << endl;
+		vector<Type*> v(0);
+  	FunctionType* FT2 = FunctionType::get(Type::getInt32Ty(TheContext), v, false);
+  	MainFun = Function::Create(FT2, Function::ExternalLinkage, "main", TheModule);
+  	BasicBlock *BB = BasicBlock::Create(TheContext, "entry", MainFun);
+  	Builder.SetInsertPoint(BB);
+
+		//cout<<"creating print strings" << endl;
+		StrPrintNum = Builder.CreateGlobalStringPtr("%d\n");
+		StrPrintChar = Builder.CreateGlobalStringPtr("%c\n");
+	}
+
+	//cout<<"begin parse" << endl;
 	yyparse();
+	//cout<<"finished parse" << endl;
+
+	if(compile){
+		Builder.CreateRet(ConstantInt::get(TheContext, APInt(32, 0)));
+  	verifyFunction(*MainFun);
+
+		TheModule->print(outs(), nullptr);
+		delete TheModule;
+	}
 
   return 0;
 }
