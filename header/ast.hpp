@@ -67,6 +67,13 @@ protected:
 };
 //*****************************************************************************************
 
+class SeqExprAST : public InnerExprAST {
+public:
+	SeqExprAST(vector<ExprAST*> ve): InnerExprAST(ve) {}
+	Value* codegen() const;
+	int interpret() const;
+};
+
 class PrintNumExprAST : public InnerExprAST {
 public:
 	PrintNumExprAST(ExprAST* e): InnerExprAST(e){}
@@ -107,26 +114,24 @@ public:
 private:
 	int adr;
 };
-//*********************************************************************************************************
-void InitializeModuleAndPassManager(void);
-AllocaInst *CreateEntryBlockAlloca(Function *TheFunction, const string &VarName);
 
 class IfElseExprAST : public InnerExprAST {
 public:
-	IfElseExprAST(int addr, ExprAST* ifBlock, ExprAST* elseBlock): InnerExprAST(ifBlock, elseBlock), adr(addr){}
-	void codegen() const;
+	IfElseExprAST(ExprAST* cond, ExprAST* ifBlock, ExprAST* elseBlock): InnerExprAST(cond, ifBlock, elseBlock){}
+	Value* codegen() const;
 	int interpret() const;
-private:
-	int adr;
 };
 
 class WhileExprAST : public InnerExprAST {
 public:
-  WhileExprAST(int addr, ExprAST* whileBlock): InnerExprAST(whileBlock), adr(addr){}
-	void codegen() const;
+  WhileExprAST(ExprAST* cond, ExprAST* whileBlock): InnerExprAST(cond, whileBlock) {}
+	Value* codegen() const;
 	int interpret() const;
-private:
-	int adr;
+
 };
+
+//*********************************************************************************************************
+void InitializeModuleAndPassManager(void);
+AllocaInst *CreateEntryBlockAlloca(Function *TheFunction, const string &VarName);
 
 #endif

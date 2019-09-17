@@ -59,6 +59,16 @@ Value* VarExprAST::codegen() const{
 	return Builder.CreateLoad(tmp, name);
 }
 
+Value* SeqExprAST::codegen() const{
+	Value* tmp = NULL;
+	for(auto ins : Vec){
+		tmp = ins->codegen();
+		if(tmp == NULL)
+			return NULL;
+	}
+	return tmp;
+}
+
 Value* PrintNumExprAST::codegen() const {
 	Value* toPrint = Vec[0]->codegen();
 	if(toPrint == NULL)
@@ -125,17 +135,76 @@ Value* IncExprAST::codegen() const {
 	return Builder.CreateStore(NewVal, alloca);
 }
 
-void IfElseExprAST::codegen() const {
-  cout << "If " << adr <<  endl;
-  cout << "Then" << endl;
-	Vec[0]->codegen();
-  cout << "Else" << endl;
-  Vec[1]->codegen();
+Value* IfElseExprAST::codegen() const {
+	Value* CondV = Vec[0]->codegen();
+  if (CondV == nullptr)
+    return nullptr;
+
+	Value *IfCondV = Builder.CreateICmpEQ(CondV, ConstantInt::get(TheContext, APInt(32, 0)), "ifcond");
+
+	Function* TheFunction = Builder.GetInsertBlock()->getParent();
+  BasicBlock* ThenBB = BasicBlock::Create(TheContext, "then", TheFunction);
+  BasicBlock* ElseBB = BasicBlock::Create(TheContext, "else");
+  BasicBlock* MergeBB = BasicBlock::Create(TheContext, "ifcont");
+
+	Builder.CreateCondBr(IfCondV, ElseBB, ThenBB);
+
+  Builder.SetInsertPoint(ThenBB);
+  Value* ThenV = Vec[1]->codegen();
+  if (ThenV == nullptr)
+    return nullptr;
+  Builder.CreateBr(MergeBB);
+  ThenBB = Builder.GetInsertBlock();
+
+	TheFunction->getBasicBlockList().push_back(ElseBB);
+  Builder.SetInsertPoint(ElseBB);
+  Value* ElseV = Vec[2]->codegen();
+  if (ElseV == nullptr)
+    return nullptr;
+  Builder.CreateBr(MergeBB);
+  ElseBB = Builder.GetInsertBlock();
+
+  TheFunction->getBasicBlockList().push_back(MergeBB);
+  Builder.SetInsertPoint(MergeBB);
+  PHINode *PHI = Builder.CreatePHI(Type::getInt32Ty(TheContext), 2, "iftmp");
+  PHI->addIncoming(ThenV, ThenBB);
+  PHI->addIncoming(ElseV, ElseBB);
+
+  return PHI;
 }
 
-void WhileExprAST::codegen() const {
-  cout << "While " << adr <<  endl;
-	Vec[0]->codegen();
+Value* WhileExprAST::codegen() const {
+		BasicBlock* CondBB = BasicBlock::Create(TheContext, "cond");
+	  BasicBlock* LoopBB = BasicBlock::Create(TheContext, "loop");
+	  BasicBlock* AfterLoopBB = BasicBlock::Create(TheContext, "afterloop");
+	  Function* TheFunction = Builder.GetInsertBlock()->getParent();
+
+		Builder.CreateBr(CondBB);
+		TheFunction->getBasicBlockList().push_back(CondBB);
+	  Builder.SetInsertPoint(CondBB);
+
+		Value* CondVal = Vec[0]->codegen();
+	  if (CondVal == nullptr){
+	    return nullptr;
+		}
+		Value* NewCondVal = Builder.CreateICmpEQ(CondVal, ConstantInt::get(TheContext, APInt(32, 0)), "whilecond");
+		Builder.CreateCondBr(NewCondVal, AfterLoopBB, LoopBB);
+
+		TheFunction->getBasicBlockList().push_back(LoopBB);
+	  Builder.SetInsertPoint(LoopBB);
+
+		Value* BodyVal = Vec[1]->codegen();
+	  if (BodyVal == nullptr){
+			//cout << "BODY MISSING!" << endl;
+	    return nullptr;
+		}
+
+		Builder.CreateBr(CondBB);
+
+		TheFunction->getBasicBlockList().push_back(AfterLoopBB);
+	  Builder.SetInsertPoint(AfterLoopBB);
+
+		return ConstantInt::get(TheContext, APInt(32, 0));
 }
 //*********************************************************************
 
@@ -147,13 +216,21 @@ int VarExprAST::interpret() const{
 	return registers[adr];
 }
 
+int SeqExprAST::interpret() const {
+	int tmp;
+	for(auto ins : Vec){
+		tmp = ins->interpret();
+	}
+	return tmp;
+}
+
 int PrintNumExprAST::interpret() const {
-  printf("Print number: %d\n", Vec[0]->interpret());
+  printf("%d\n", Vec[0]->interpret());
 	return 0;
 }
 
 int PrintCharExprAST::interpret() const {
-	printf("Print number: %c\n", Vec[0]->interpret());
+	printf("%c\n", Vec[0]->interpret());
 	return 0;
 }
 
@@ -177,22 +254,23 @@ int IncExprAST::interpret() const {
 }
 
 int IfElseExprAST::interpret() const {
-  if (registers[adr] == 0){
-    Vec[0]->interpret();
-  }
-  else{
-    Vec[1]->interpret();
-  }
-
-  return 0;
+	int cond = Vec[0]->interpret();
+	if(cond){
+		Vec[1]->interpret();
+	}
+	else{
+		Vec[2]->interpret();
+	}
+	return 0;
 }
 
 int WhileExprAST::interpret() const {
-  while (registers[adr] == 0){
-    Vec[0]->interpret();
-  }
-
-  return 0;
+	int cond = Vec[0]->interpret();
+	while(cond){
+		cond = Vec[0]->interpret();
+		Vec[1]->interpret();
+	}
+	return 0;
 }
 //*********************************************************************
 

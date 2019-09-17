@@ -3,6 +3,8 @@
 #include <iostream>
 #include <fstream>
 #include <stack>
+#include <string>
+#include <cstddef>
 
 using namespace std;
 
@@ -161,7 +163,7 @@ int parseImage(char* image_path){
             tmpfile << "\n";
           else
             first = 0;
-          tmpfile << "if";
+          tmpfile << "if ";
           arguments.push(5);
 					break;
 				case 3169244:
@@ -169,14 +171,14 @@ int parseImage(char* image_path){
             tmpfile << "\n";
           else
             first = 0;
-          tmpfile << "else";
+          tmpfile << "else ";
 					break;
 				case 188212:
           if(!first)
             tmpfile << "\n";
           else
             first = 0;
-          tmpfile << "while";
+          tmpfile << "while ";
           arguments.push(5);
 					break;
 				case 150136:
@@ -184,7 +186,7 @@ int parseImage(char* image_path){
             tmpfile << "\n";
           else
             first = 0;
-          tmpfile << "end_block";
+          tmpfile << "end_block ";
 			}
 		}
 
@@ -193,4 +195,10 @@ int parseImage(char* image_path){
 	image_done(image);
 	tmpfile.close();
   return 0;
+}
+
+string splitFileName(const string& s){
+	size_t found = s.find_last_of(".");
+	string str(s.substr(0, found));
+	return str;
 }

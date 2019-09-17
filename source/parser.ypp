@@ -2,7 +2,6 @@
 #include "./header/util.hpp"
 #include "./header/ast.hpp"
 #include <iostream>
-#include <cstring>
 
 #define YYDEBUG 1
 #define NUMBER_OF_REGISTERS 65536
@@ -11,6 +10,7 @@ using namespace std;
 
 int registers[NUMBER_OF_REGISTERS];
 bool compile = true;
+bool debug = true;
 
 void yyerror(string s){
   cerr<<s<<endl;
@@ -23,13 +23,15 @@ int yylex();
 
 %union{
 	ExprAST* e;
+	vector<ExprAST*> *ve;
  	int i;
 }
 
 %token print_token add_token mul_token label_token jump_token inc_token if_token else_token while_token end_block_token
 %token<i> num_token address_token
 
-%type <e> Instruction Program NumVal
+%type <e> Instruction NumVal
+%type <ve> Instruction_Block
 
 %%
 //grammar for testing
@@ -63,11 +65,24 @@ Instruction: print_token num_token NumVal {
 | inc_token address_token{
 		$$ = new IncExprAST($2);
 }
-| if_token address_token Program else_token Program end_block_token{
-		$$ = new IfElseExprAST($2, $3, $5);
+| if_token NumVal Instruction_Block else_token Instruction_Block end_block_token{
+		$$ = new IfElseExprAST($2, new SeqExprAST(*$3), new SeqExprAST(*$5));
+		delete $3;
+		delete $5;
 }
-| while_token address_token Program end_block_token{
-		$$ = new WhileExprAST($2, $3);
+| while_token NumVal Instruction_Block end_block_token{
+		$$ = new WhileExprAST($2, new SeqExprAST(*$3));
+		delete $3;
+}
+;
+
+Instruction_Block: Instruction_Block Instruction {
+	$$ = $1;
+	$$->push_back($2);
+}
+| Instruction {
+	$$ = new vector<ExprAST*>();
+	$$->push_back($1);
 }
 ;
 
@@ -95,11 +110,15 @@ int main(int argc, char** argv){
 		yyerror("Usage: ./pixelcode path_to_image_file -i(for interpretation)");
 	}
 
-	if(argc == 3 && strcmp(argv[2], "-i") == 0){
+	if(argc == 3 && strcmp(argv[1], "-i") == 0){
+		cout << "Pixel Interpretation: \n" << endl;
 		compile = false;
 	}
 
-	parseImage(argv[1]);
+	if(argc == 2)
+		parseImage(argv[1]);
+	else
+		parseImage(argv[2]);
 
 	yyin = fopen("tmpReprFile", "r");
 	if(!yyin)
@@ -133,9 +152,14 @@ int main(int argc, char** argv){
 		Builder.CreateRet(ConstantInt::get(TheContext, APInt(32, 0)));
   	verifyFunction(*MainFun);
 
+		//string fileName(splitFileName(argv[1]) + ".ll" );
+		//TODO: output IR to ll file then use llc on ll file and gcc on s file to auto-generate an executable
 		TheModule->print(outs(), nullptr);
 		delete TheModule;
 	}
 
+	fclose(yyin);
+	if(!debug)
+		remove("tmpReprFile");
   return 0;
 }
