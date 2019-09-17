@@ -208,6 +208,15 @@ int parseImage(char* image_path){
 					arguments.push(5);
 					tmpfile << "< ";
 					break;
+				case 121085072:
+          if(!first)
+            tmpfile << "\n";
+          else
+            first = 0;
+          tmpfile << "add 08000 ";
+					arguments.push(5);
+					arguments.push(5);
+          break;
 			}
 		}
 

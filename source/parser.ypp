@@ -1,7 +1,9 @@
 %{
 #include "./header/util.hpp"
+#include "llvm/Bitcode/BitcodeWriter.h"
 #include "./header/ast.hpp"
 #include <iostream>
+#include <fstream>
 
 #define YYDEBUG 1
 #define NUMBER_OF_REGISTERS 65536
@@ -10,7 +12,7 @@ using namespace std;
 
 int registers[NUMBER_OF_REGISTERS];
 bool compile = true;
-bool debug = true;
+bool debug = false;
 
 void yyerror(string s){
   cerr<<s<<endl;
@@ -116,7 +118,7 @@ int main(int argc, char** argv){
 		yyerror("Usage: ./pixelcode path_to_image_file -i(for interpretation)");
 	}
 
-	if(argc == 3 && strcmp(argv[1], "-i") == 0){
+	if(argc == 3 && strcmp(argv[2], "-i") == 0){
 		cout << "Pixel Interpretation: \n" << endl;
 		compile = false;
 	}
@@ -158,14 +160,32 @@ int main(int argc, char** argv){
 		Builder.CreateRet(ConstantInt::get(TheContext, APInt(32, 0)));
   	verifyFunction(*MainFun);
 
-		//string fileName(splitFileName(argv[1]) + ".ll" );
-		//TODO: output IR to ll file then use llc on ll file and gcc on s file to auto-generate an executable
-		TheModule->print(outs(), nullptr);
+    if (!debug){
+      std::error_code EC;
+      llvm::raw_fd_ostream OS("module", EC, llvm::sys::fs::F_None);
+      llvm::WriteBitcodeToFile(TheModule, OS);
+      OS.flush();
+
+      char commandString[100];
+      string fileName(splitFileName(argv[1]));
+      sprintf(commandString, "clang++ module.s -o %s", fileName.c_str());
+      system("llc module");
+      system(commandString);
+    }
+    else{
+      //string fileName(splitFileName(argv[1]) + ".ll" );
+      //TODO: output IR to ll file then use llc on ll file and gcc on s file to auto-generate an executable
+      TheModule->print(outs(), nullptr);
+    }
 		delete TheModule;
+
 	}
 
 	fclose(yyin);
-	if(!debug)
+	if(!debug){
+    remove("module");
+    remove("module.s");
 		remove("tmpReprFile");
+  }
   return 0;
 }
