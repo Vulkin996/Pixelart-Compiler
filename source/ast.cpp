@@ -123,6 +123,41 @@ Value* MulExprAST::codegen() const {
 	return Builder.CreateStore(Val, alloca);
 }
 
+Value* LtExprAST::codegen() const {
+	Value *l = Vec[0]->codegen();
+  Value *r = Vec[1]->codegen();
+  if (!l || !r)
+    return nullptr;
+
+	string reg_adr("r" + to_string(adr));
+	AllocaInst* alloca = NamedValues[reg_adr];
+	if (alloca == nullptr){
+		 alloca = CreateEntryBlockAlloca(MainFun, reg_adr);
+		 NamedValues[reg_adr] = alloca;
+	}
+	Value* Val = Builder.CreateICmpSLT(l, r, "lttmp");
+	Value* NewVal = Builder.CreateIntCast(Val, Type::getInt32Ty(TheContext), false);
+	return Builder.CreateStore(NewVal, alloca);
+}
+
+Value* EqExprAST::codegen() const {
+
+	Value *l = Vec[0]->codegen();
+  Value *r = Vec[1]->codegen();
+  if (!l || !r)
+    return nullptr;
+
+	string reg_adr("r" + to_string(adr));
+	AllocaInst* alloca = NamedValues[reg_adr];
+	if (alloca == nullptr){
+		 alloca = CreateEntryBlockAlloca(MainFun, reg_adr);
+		 NamedValues[reg_adr] = alloca;
+	}
+	Value* Val = Builder.CreateICmpEQ(l, r, "eqtmp");
+	Value* NewVal = Builder.CreateIntCast(Val, Type::getInt32Ty(TheContext), false);
+	return Builder.CreateStore(NewVal, alloca);
+}
+
 Value* IncExprAST::codegen() const {
 	string reg_adr("r" + to_string(adr));
 	AllocaInst* alloca = NamedValues[reg_adr];
@@ -140,7 +175,7 @@ Value* IfElseExprAST::codegen() const {
   if (CondV == nullptr)
     return nullptr;
 
-	Value *IfCondV = Builder.CreateICmpEQ(CondV, ConstantInt::get(TheContext, APInt(32, 0)), "ifcond");
+	Value *IfCondV = Builder.CreateICmpSLT(CondV, ConstantInt::get(TheContext, APInt(32, 0)), "ifcond");
 
 	Function* TheFunction = Builder.GetInsertBlock()->getParent();
   BasicBlock* ThenBB = BasicBlock::Create(TheContext, "then", TheFunction);
@@ -187,7 +222,7 @@ Value* WhileExprAST::codegen() const {
 	  if (CondVal == nullptr){
 	    return nullptr;
 		}
-		Value* NewCondVal = Builder.CreateICmpEQ(CondVal, ConstantInt::get(TheContext, APInt(32, 0)), "whilecond");
+		Value* NewCondVal = Builder.CreateICmpSLT(CondVal, ConstantInt::get(TheContext, APInt(32, 0)), "whilecond");
 		Builder.CreateCondBr(NewCondVal, AfterLoopBB, LoopBB);
 
 		TheFunction->getBasicBlockList().push_back(LoopBB);
@@ -207,6 +242,22 @@ Value* WhileExprAST::codegen() const {
 		return ConstantInt::get(TheContext, APInt(32, 0));
 }
 //*********************************************************************
+
+int LtExprAST::interpret() const {
+	int l = Vec[0]->interpret();
+	int r = Vec[1]->interpret();
+	//cout << "Ll: " << l << " Rl: " << r << endl;
+	registers[adr] = (l < r);
+	return registers[adr];
+}
+
+int EqExprAST::interpret() const {
+	int l = Vec[0]->interpret();
+	int r = Vec[1]->interpret();
+	//cout << "Le: " << l << " Re: " << r << endl;
+	registers[adr] = (l == r);
+	return registers[adr];
+}
 
 int NumberExprAST::interpret() const {
 	return Val;

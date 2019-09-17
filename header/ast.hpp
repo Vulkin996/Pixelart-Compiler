@@ -106,6 +106,24 @@ private:
 	int adr;
 };
 
+class LtExprAST : public InnerExprAST {
+public:
+	LtExprAST(ExprAST* l, ExprAST* r, int a): InnerExprAST(l,r), adr(a){}
+	Value* codegen() const;
+	int interpret() const;
+private:
+	int adr;
+};
+
+class EqExprAST : public InnerExprAST {
+public:
+	EqExprAST(ExprAST* l, ExprAST* r, int a): InnerExprAST(l,r), adr(a){}
+	Value* codegen() const;
+	int interpret() const;
+private:
+	int adr;
+};
+
 class IncExprAST : public ExprAST {
 public:
 	IncExprAST(int adr): adr(adr){}

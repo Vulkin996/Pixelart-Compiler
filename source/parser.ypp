@@ -27,7 +27,7 @@ int yylex();
  	int i;
 }
 
-%token print_token add_token mul_token label_token jump_token inc_token if_token else_token while_token end_block_token
+%token print_token add_token mul_token label_token jump_token inc_token if_token else_token while_token end_block_token comp_equal_token comp_less_token
 %token<i> num_token address_token
 
 %type <e> Instruction NumVal
@@ -61,6 +61,12 @@ Instruction: print_token num_token NumVal {
 }
 | mul_token NumVal NumVal address_token{
 		$$ = new MulExprAST($2, $3, $4);
+}
+| comp_less_token NumVal NumVal address_token{
+	$$ = new LtExprAST($2, $3, $4);
+}
+| comp_equal_token NumVal NumVal address_token{
+	$$ = new EqExprAST($2, $3, $4);
 }
 | inc_token address_token{
 		$$ = new IncExprAST($2);

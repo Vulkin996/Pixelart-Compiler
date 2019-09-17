@@ -39,6 +39,12 @@ void lexicalError(string msg){
 					return while_token; }
 "end_block" { //cout << "label_token ";
 					return end_block_token; }
+"==" {
+	return comp_less_token;
+}
+"<" {
+	return comp_equal_token;
+}
 0[0-9a-f]* {
 						yylval.i = strtol(yytext, NULL, 16) - pow(16, 4)/2;
 						//cout << "num_token(" << yylval.i << ") " ;
