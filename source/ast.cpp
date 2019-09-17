@@ -66,6 +66,19 @@ void MulExprAST::codegen() const {
 void IncExprAST::codegen() const {
 	cout << "Inc" << endl;
 }
+
+void IfElseExprAST::codegen() const {
+  cout << "If " << adr <<  endl;
+  cout << "Then" << endl;
+	Vec[0]->codegen();
+  cout << "Else" << endl;
+  Vec[1]->codegen();
+}
+
+void WhileExprAST::codegen() const {
+  cout << "While " << adr <<  endl;
+	Vec[0]->codegen();
+}
 //*********************************************************************
 
 int NumberExprAST::interpret() const {
@@ -103,5 +116,24 @@ int MulExprAST::interpret() const {
 int IncExprAST::interpret() const {
 	registers[adr]++;
 	return registers[adr];
+}
+
+int IfElseExprAST::interpret() const {
+  if (registers[adr] == 0){
+    Vec[0]->interpret();
+  }
+  else{
+    Vec[1]->interpret();
+  }
+
+  return 0;
+}
+
+int WhileExprAST::interpret() const {
+  while (registers[adr] == 0){
+    Vec[0]->interpret();
+  }
+
+  return 0;
 }
 //*********************************************************************

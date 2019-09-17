@@ -156,6 +156,35 @@ int parseImage(char* image_path){
 				 	tmpfile << "++";
 					arguments.push(5);
 					break;
+        case 33150243:
+          if(!first)
+            tmpfile << "\n";
+          else
+            first = 0;
+          tmpfile << "if";
+          arguments.push(5);
+					break;
+				case 3169244:
+          if(!first)
+            tmpfile << "\n";
+          else
+            first = 0;
+          tmpfile << "else";
+					break;
+				case 188212:
+          if(!first)
+            tmpfile << "\n";
+          else
+            first = 0;
+          tmpfile << "while";
+          arguments.push(5);
+					break;
+				case 150136:
+          if(!first)
+            tmpfile << "\n";
+          else
+            first = 0;
+          tmpfile << "end_block";
 			}
 		}
 

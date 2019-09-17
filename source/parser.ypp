@@ -26,10 +26,10 @@ int yylex();
  	int i;
 }
 
-%token print_token add_token mul_token label_token jump_token inc_token
+%token print_token add_token mul_token label_token jump_token inc_token if_token else_token while_token end_block_token
 %token<i> num_token address_token
 
-%type <e> Instruction NumVal
+%type <e> Instruction Program NumVal
 
 %%
 //grammar for testing
@@ -63,6 +63,12 @@ Instruction: print_token num_token NumVal {
 | inc_token address_token{
 		$$ = new IncExprAST($2);
 }
+| if_token address_token Program else_token Program end_block_token{
+		$$ = new IfElseExprAST($2, $3, $5);
+}
+| while_token address_token Program end_block_token{
+		$$ = new WhileExprAST($2, $3);
+}
 ;
 
 NumVal: num_token {
@@ -80,7 +86,7 @@ int main(int argc, char** argv){
 	if(argc < 2 || argc > 3)
 		yyerror("Usage: ./pixelcode path_to_image_file -i(for interpretation)");
 
-	if(strcmp(argv[2], "-i") == 0){
+	if(argc == 3 && strcmp(argv[2], "-i") == 0){
 		compile = false;
 	}
 

@@ -95,4 +95,22 @@ private:
 	int adr;
 };
 
+class IfElseExprAST : public InnerExprAST {
+public:
+	IfElseExprAST(int addr, ExprAST* ifBlock, ExprAST* elseBlock): InnerExprAST(ifBlock, elseBlock), adr(addr){}
+	void codegen() const;
+	int interpret() const;
+private:
+	int adr;
+};
+
+class WhileExprAST : public InnerExprAST {
+public:
+  WhileExprAST(int addr, ExprAST* whileBlock): InnerExprAST(whileBlock), adr(addr){}
+	void codegen() const;
+	int interpret() const;
+private:
+	int adr;
+};
+
 #endif
