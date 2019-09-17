@@ -90,8 +90,9 @@ int parseImage(char* image_path){
 					break;
 				case 26035126:
 					tmpfile << "f";
-
 					break;
+        default:
+          continue;
 			}
       top = arguments.top();
       arguments.pop();
