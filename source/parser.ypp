@@ -149,7 +149,7 @@ int main(int argc, char** argv){
 
 		//cout<<"creating print strings" << endl;
 		StrPrintNum = Builder.CreateGlobalStringPtr("%d\n");
-		StrPrintChar = Builder.CreateGlobalStringPtr("%c\n");
+		StrPrintChar = Builder.CreateGlobalStringPtr("%c");
 	}
 
 	//cout<<"begin parse" << endl;
