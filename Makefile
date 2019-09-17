@@ -27,7 +27,10 @@ imageParser.o: source/imageParser.cpp
 image.o: source/image.c
 	$(CC) -c -o $@ $<
 
-.PHONY: clean
+.PHONY: clean clear_tests
 
 clean:
-	rm -f *~ *tab* lex.yy.c $(PROG) *.o *.output tmpReprFile
+	rm -f *~ *tab* lex.yy.c $(PROG) *.o *.output tmpReprFile *.s *.ll *.out
+
+clear_tests:
+	rm -f *.s *.ll *.out

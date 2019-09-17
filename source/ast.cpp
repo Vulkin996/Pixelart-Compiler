@@ -4,6 +4,20 @@ using namespace std;
 
 extern int registers[];
 
+
+extern void yyerror(string s);
+
+LLVMContext TheContext;
+IRBuilder<> Builder(TheContext);
+Module* TheModule;
+map<string, AllocaInst*> NamedValues;
+legacy::FunctionPassManager* TheFPM;
+
+extern Function* PrintfFun;
+extern Function* MainFun;
+extern Value* StrPrintNum;
+extern Value* StrPrintChar;
+
 //*********************************************************************
 InnerExprAST::~InnerExprAST() {
   for (auto i : Vec)
@@ -33,38 +47,82 @@ InnerExprAST::InnerExprAST(ExprAST *e1, ExprAST *e2, ExprAST *e3, ExprAST *e4) {
 }
 //*********************************************************************
 
-void NumberExprAST::codegen() const {
-	cout << Val << endl;
+Value* NumberExprAST::codegen() const {
+		return ConstantInt::get(TheContext, APInt(32, Val));
 }
 
-void VarExprAST::codegen() const{
-	cout << "Addr:" << adr << endl;
+Value* VarExprAST::codegen() const{
+	string name("r" + to_string(adr));
+	AllocaInst* tmp = NamedValues[name];
+	if (tmp == nullptr)
+    yyerror("Invalid Address!");
+	return Builder.CreateLoad(tmp, name);
 }
 
-void PrintNumExprAST::codegen() const {
-	cout << "Print number" << endl;
-	Vec[0]->codegen();
+Value* PrintNumExprAST::codegen() const {
+	Value* toPrint = Vec[0]->codegen();
+	if(toPrint == NULL)
+		return NULL;
+
+	vector<Value *> ArgsV;
+	ArgsV.push_back(StrPrintNum);
+	ArgsV.push_back(toPrint);
+	return Builder.CreateCall(PrintfFun, ArgsV, "printfCall");
 }
 
-void PrintCharExprAST::codegen() const {
-	cout << "Print character" << endl;
-	Vec[0]->codegen();
+Value* PrintCharExprAST::codegen() const {
+	Value* toPrint = Vec[0]->codegen();
+	if(toPrint == NULL)
+		return NULL;
+
+	vector<Value *> ArgsV;
+	ArgsV.push_back(StrPrintChar);
+	ArgsV.push_back(toPrint);
+	return Builder.CreateCall(PrintfFun, ArgsV, "printfCall");
 }
 
-void AddExprAST::codegen() const {
-	cout << "Add" << endl;
-	Vec[0]->codegen();
-	Vec[1]->codegen();
+Value* AddExprAST::codegen() const {
+	Value *l = Vec[0]->codegen();
+  Value *r = Vec[1]->codegen();
+  if (!l || !r)
+    return nullptr;
+
+	string reg_adr("r" + to_string(adr));
+	AllocaInst* alloca = NamedValues[reg_adr];
+	if (alloca == nullptr){
+		 alloca = CreateEntryBlockAlloca(MainFun, reg_adr);
+		 NamedValues[reg_adr] = alloca;
+	}
+	Value* Val = Builder.CreateAdd(l, r, "addtmp");
+	return Builder.CreateStore(Val, alloca);
 }
 
-void MulExprAST::codegen() const {
-	cout << "Mul" << endl;
-	Vec[0]->codegen();
-	Vec[1]->codegen();
+Value* MulExprAST::codegen() const {
+	Value *l = Vec[0]->codegen();
+  Value *r = Vec[1]->codegen();
+  if (!l || !r)
+    return nullptr;
+
+	string reg_adr("r" + to_string(adr));
+	AllocaInst* alloca = NamedValues[reg_adr];
+	if (alloca == nullptr){
+		 alloca = CreateEntryBlockAlloca(MainFun, reg_adr);
+		 NamedValues[reg_adr] = alloca;
+	}
+	Value* Val = Builder.CreateMul(l, r, "multmp");
+	return Builder.CreateStore(Val, alloca);
 }
 
-void IncExprAST::codegen() const {
-	cout << "Inc" << endl;
+Value* IncExprAST::codegen() const {
+	string reg_adr("r" + to_string(adr));
+	AllocaInst* alloca = NamedValues[reg_adr];
+	if (alloca == nullptr)
+    yyerror("Invalid Address!");
+
+	Value* Val = Builder.CreateLoad(alloca, reg_adr);
+
+	Value* NewVal = Builder.CreateMul(Val, ConstantInt::get(TheContext, APInt(32, 1)), "inctmp");
+	return Builder.CreateStore(NewVal, alloca);
 }
 
 void IfElseExprAST::codegen() const {
@@ -137,3 +195,27 @@ int WhileExprAST::interpret() const {
   return 0;
 }
 //*********************************************************************
+
+AllocaInst *CreateEntryBlockAlloca(Function *TheFunction, const string &VarName) {
+  IRBuilder<> TmpB(&TheFunction->getEntryBlock(), TheFunction->getEntryBlock().begin());
+  return TmpB.CreateAlloca(Type::getInt32Ty(TheContext), 0, VarName.c_str());
+}
+
+void InitializeModuleAndPassManager(void){
+	TheModule = new Module("pixel_module", TheContext);
+
+  // Create a new pass manager attached to it.
+  TheFPM = new legacy::FunctionPassManager(TheModule);
+
+  // Do simple "peephole" optimizations and bit-twiddling optzns.
+  TheFPM->add(createInstructionCombiningPass());
+  // Reassociate expressions.
+  TheFPM->add(createReassociatePass());
+  // Eliminate Common SubExpressions.
+  TheFPM->add(createNewGVNPass());
+  // Simplify the control flow graph (deleting unreachable blocks, etc).
+  TheFPM->add(createCFGSimplificationPass());
+  TheFPM->add(createPromoteMemoryToRegisterPass());
+
+  TheFPM->doInitialization();
+}
