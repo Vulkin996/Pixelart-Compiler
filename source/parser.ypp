@@ -118,15 +118,21 @@ int main(int argc, char** argv){
 		yyerror("Usage: ./pixelcode path_to_image_file -i(for interpretation)");
 	}
 
-	if(argc == 3 && strcmp(argv[1], "-i") == 0){
+	if(argc == 3 && strcmp(argv[2], "-i") == 0){
 		cout << "Pixel Interpretation: \n" << endl;
 		compile = false;
 	}
 
-	if(argc == 2)
-		parseImage(argv[1]);
-	else
-		parseImage(argv[2]);
+  if(argc == 3 && strcmp(argv[2], "-o") == 0){
+    cout << "Exec compilation: \n" << endl;
+		debug = false;
+	}
+  else{
+    cout << "Debug compilation: \n" << endl;
+    debug = true;
+  }
+
+	parseImage(argv[1]);
 
 	yyin = fopen("tmpReprFile", "r");
 	if(!yyin)
